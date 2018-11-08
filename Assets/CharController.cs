@@ -5,7 +5,14 @@ using UnityEngine;
 public class CharController : MonoBehaviour
 {
     [SerializeField]
-    float moveSpeed = 4f; //Change in inspector to adjust move speed
+    public float speed = 4f; //Change in inspector to adjust move speed
+    [SerializeField]
+    public float friction = .9f; //Change in inspector to adjust move speed
+    [SerializeField]
+    public AnimationCurve accelerationCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    public Actions actions;
+
     Vector3 forward, right; // Keeps track of our relative forward and right vectors
 
     void Start()
@@ -20,16 +27,28 @@ public class CharController : MonoBehaviour
     {
         if (Input.anyKey) // only execute if a key is being pressed
             Move();
+        else
+            actions.Stay();
     }
+
+    private float xGT, zGT;
 
     void Move()
     {
         Vector3 direction = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")); // setup a direction Vector based on keyboard input. GetAxis returns a value between -1.0 and 1.0. If the A key is pressed, GetAxis(HorizontalKey) will return -1.0. If D is pressed, it will return 1.0
-        Vector3 rightMovement = right * moveSpeed * Time.deltaTime * Input.GetAxis("Horizontal"); // Our right movement is based on the right vector, movement speed, and our GetAxis command. We multiply by Time.deltaTime to make the movement smooth.
-        Vector3 upMovement = forward * moveSpeed * Time.deltaTime * Input.GetAxis("Vertical"); // Up movement uses the forward vector, movement speed, and the vertical axis inputs.
+        float xCoeff = direction.x < 0 ? -1 : 1;
+        float zCoeff = direction.z < 0 ? -1 : 1;
+        float xDelta = Time.deltaTime * Input.GetAxis("Horizontal");
+        float zDelta = Time.deltaTime * Input.GetAxis("Vertical");
+        xGT += Mathf.Max(0f, Mathf.Min(1f, xGT + xDelta * xCoeff));
+        zGT += Mathf.Max(0f, Mathf.Min(1f, zGT + zDelta * zCoeff));
+        UnityEngine.Debug.Log(""+(speed * accelerationCurve.Evaluate(xGT) * xDelta));
+        Vector3 rightMovement = right * speed * accelerationCurve.Evaluate(xGT) * xDelta; // Our right movement is based on the right vector, movement speed, and our GetAxis command. We multiply by Time.deltaTime to make the movement smooth.
+        Vector3 upMovement = forward  * speed * accelerationCurve.Evaluate(zGT) * zDelta; // Up movement uses the forward vector, movement speed, and the vertical axis inputs.
         Vector3 heading = Vector3.Normalize(rightMovement + upMovement); // This creates our new direction. By combining our right and forward movements and normalizing them, we create a new vector that points in the appropriate direction with a length no greater than 1.0
         transform.forward = heading; // Sets forward direction of our game object to whatever direction we're moving in
         transform.position += rightMovement; // move our transform's position right/left
         transform.position += upMovement; // Move our transform's position up/down
+        actions.Run();
      }
 }

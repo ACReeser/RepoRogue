@@ -5,6 +5,8 @@ Isometric Roguelike in a cyberpunk dystopia
 * LowpolyStreetPack
 * PostProcessing
 * WhiteCity
+* Standard Assets
+* Cyborg Girl
 
 ## Features 
 * player controls a repo man hacking and slashing way through a cyberpunk city

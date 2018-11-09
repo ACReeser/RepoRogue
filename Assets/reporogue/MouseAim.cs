@@ -8,6 +8,8 @@ public class MouseAim : MonoBehaviour {
     public Transform mouseVisualization;
     public Animator animator;
     public ThirdPersonCharacter character;
+    public BulletShooter shooter;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -36,6 +38,7 @@ public class MouseAim : MonoBehaviour {
         }
         if (Input.GetMouseButtonUp(0))
         {
+            shooter.Shoot();
             animator.SetTrigger("SniperFire");
         }
     }

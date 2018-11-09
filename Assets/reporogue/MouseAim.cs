@@ -26,7 +26,18 @@ public class MouseAim : MonoBehaviour {
             // get the hit point:
             mouseVisualization.transform.position = ray.GetPoint(distance)-ray.direction.normalized;
         }
-
+        if (Input.GetMouseButtonDown(1))
+        {
+            animator.SetBool("Aim", true);
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            animator.SetBool("Aim", false);
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            animator.SetTrigger("SniperFire");
+        }
     }
 	
 	// Update is called once per frame

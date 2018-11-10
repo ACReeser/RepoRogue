@@ -60,9 +60,12 @@ public class MouseAim : MonoBehaviour {
         //{
         //    animator.SetBoneLocalRotation(HumanBodyBones.Hips, Quaternion.Slerp(q, q2, Time.deltaTime));
         //}
-        animator.SetLookAtPosition(mouseVisualization.transform.position);
+        if (animator.GetBool("Aim"))
+        {
+            animator.SetLookAtPosition(mouseVisualization.transform.position);
         
-        animator.SetLookAtWeight(1, character.IsGrounded ? 1f : 0f);
+            animator.SetLookAtWeight(1, character.IsGrounded ? 1f : 0f);
+        }
         //Transform spine = animator.GetBoneTransform(HumanBodyBones.Spine);
         //Vector3 forward = (mouseVisualization.transform.position - spine.position).normalized;
         //Vector3 up = Vector3.Cross(forward, transform.right);

@@ -6,6 +6,7 @@ using UnityEngine;
 public interface ITarget
 {
     void TakeDamage(int amount);
+    Transform transform { get; }
 }
 
 public class Player : MonoBehaviour, ITarget {

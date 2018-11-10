@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BulletShooter : MonoBehaviour {
-
+    public DamageAnnotator Annotator;
     public Transform bulletPrefab;
     public Transform muzzle;
     public Transform PoolParent;
@@ -84,6 +84,8 @@ public class BulletShooter : MonoBehaviour {
     {
         bullet.gameObject.SetActive(false);
         inactiveBullets.Enqueue(bullet.GetSiblingIndex());
-        target.TakeDamage(UnityEngine.Random.Range(1, 10));
+        int damage = UnityEngine.Random.Range(1, 10);
+        target.TakeDamage(damage);
+        Annotator.ShowText(target.transform.position, (-damage).ToString());
     }
 }

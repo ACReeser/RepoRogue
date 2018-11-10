@@ -1,9 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class GunDrone : MonoBehaviour {
+public class GunDrone : MonoBehaviour, ITarget {
 
     public float BobDistance = .2f;
     public float SensorDistance = 10f;
@@ -11,6 +12,9 @@ public class GunDrone : MonoBehaviour {
     public Transform body;
     public Transform turret;
     public Transform player;
+    public Transform shadow;
+    public Collider DeathCollider;
+    public Transform ExplosionPrefab;
     public Light StatusLight;
 
     private bool alive = true;
@@ -66,4 +70,19 @@ public class GunDrone : MonoBehaviour {
             }
         }
 	}
+
+    private int health = 25;
+    public void TakeDamage(int amount)
+    {
+        health -= amount;
+        if (health < 0)
+        {
+            alive = false;
+            shadow.gameObject.SetActive(false);
+            this.GetComponent<Collider>().enabled = false;
+            var newBody = DeathCollider.transform.parent.gameObject.AddComponent<Rigidbody>();
+            newBody.mass = 100;
+            GameObject.Instantiate(ExplosionPrefab, DeathCollider.transform.position, Quaternion.identity);
+        }
+    }
 }

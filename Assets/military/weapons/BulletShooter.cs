@@ -65,6 +65,7 @@ public class BulletShooter : MonoBehaviour {
         {
             newBullet = GameObject.Instantiate(bulletPrefab, muzzle);
             bulletIndex = PoolParent.childCount;
+            newBullet.GetComponent<Bullet>().OnBulletCollide += this.OnBulletCollide;
             //UnityEngine.Debug.Log("creating new bullet number " + bulletIndex);
         }
         BulletLifetimes[bulletIndex] = 5f;
@@ -77,5 +78,12 @@ public class BulletShooter : MonoBehaviour {
         newBullet.GetChild(0).GetComponent<TrailRenderer>().Clear();
         newBullet.gameObject.SetActive(true);
         //UnityEngine.Debug.Log(newBullet.gameObject.activeInHierarchy);      
+    }
+    
+    internal void OnBulletCollide(Transform bullet, ITarget target)
+    {
+        bullet.gameObject.SetActive(false);
+        inactiveBullets.Enqueue(bullet.GetSiblingIndex());
+        target.TakeDamage(UnityEngine.Random.Range(1, 10));
     }
 }

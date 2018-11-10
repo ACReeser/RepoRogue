@@ -6,7 +6,6 @@ using UnityEngine;
 public class BulletShooter : MonoBehaviour {
     public DamageAnnotator Annotator;
     public Transform bulletPrefab;
-    public Transform muzzle;
     public Transform PoolParent;
 
     private const int MaxBullets = 100;
@@ -47,11 +46,11 @@ public class BulletShooter : MonoBehaviour {
         else
         {
             BulletLifetimes[bulletIndex] -= Time.deltaTime;
-            bullet.Translate(Vector3.forward, Space.Self);
+            bullet.Translate(Vector3.forward*.8f, Space.Self);
         }
     }
 
-    internal void Shoot()
+    internal void Shoot(Vector3 startPos, Quaternion startRot)
     {
         int bulletIndex;
         Transform newBullet = null;
@@ -63,16 +62,14 @@ public class BulletShooter : MonoBehaviour {
         }
         else
         {
-            newBullet = GameObject.Instantiate(bulletPrefab, muzzle);
+            newBullet = GameObject.Instantiate(bulletPrefab);
             bulletIndex = PoolParent.childCount;
             newBullet.GetComponent<Bullet>().OnBulletCollide += this.OnBulletCollide;
             //UnityEngine.Debug.Log("creating new bullet number " + bulletIndex);
         }
         BulletLifetimes[bulletIndex] = 5f;
-        newBullet.gameObject.SetActive(true);
-        newBullet.SetParent(muzzle);
-        newBullet.localPosition = Vector3.zero;
-        newBullet.localRotation = Quaternion.identity;
+        newBullet.position = startPos;
+        newBullet.rotation = startRot;
         newBullet.SetParent(PoolParent);
         newBullet.SetSiblingIndex(bulletIndex);
         newBullet.GetChild(0).GetComponent<TrailRenderer>().Clear();

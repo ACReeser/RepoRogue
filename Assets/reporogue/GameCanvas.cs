@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[Serializable]
 public class BarDisplay
 {
     public Text Label;
@@ -25,6 +27,6 @@ public class GameCanvas : MonoBehaviour {
     public void UpdateHealthBar(int health, int maxHealth = 100)
     {
         HealthBar.Label.text = health.ToString() + "/"+maxHealth.ToString();
-        HealthBar.Bar.fillAmount = health / maxHealth;
+        HealthBar.Bar.fillAmount = (health+0f) / (maxHealth+0f);
     }
 }

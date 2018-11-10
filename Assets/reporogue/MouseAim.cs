@@ -5,7 +5,7 @@ using UnityStandardAssets.Characters.ThirdPerson;
 
 public class MouseAim : MonoBehaviour {
     public float floorHeight;
-    public Transform mouseVisualization;
+    public Transform mouseVisualization, muzzle;
     public Animator animator;
     public ThirdPersonCharacter character;
     public BulletShooter shooter;
@@ -38,7 +38,7 @@ public class MouseAim : MonoBehaviour {
         }
         if (Input.GetMouseButtonUp(0))
         {
-            shooter.Shoot();
+            shooter.Shoot(muzzle.position, muzzle.rotation);
             animator.SetTrigger("SniperFire");
         }
     }

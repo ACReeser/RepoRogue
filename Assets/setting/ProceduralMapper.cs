@@ -72,7 +72,8 @@ public enum TileType
 }
 public enum DirectionalTileType
 {
-    Intersection = 0,
+    Unknown = 0,
+    Intersection = 1,
     TJunctionTop, // = 10,
     TJunctionRight,
     TJunctionBottom,
@@ -86,10 +87,19 @@ public enum DirectionalTileType
 }
 public enum Faces
 {
-    Top = 0, Right = 1, Bottom = 2, Left = 3, Unknown = 9
+    Top = 0, Right = 1, Bottom = 2, Left = 3
 }
+public struct NeighborhoodMap
+{
+    public bool? Top;
+    public bool? Left;
+    public bool? Bottom;
+    public bool? Right;
+}
+
 public static class TileTypeExtensions
 {
+    private static DirectionalTileType[] AllDirectionalTiles = Enum.GetValues(typeof(DirectionalTileType)) as DirectionalTileType[];
     private static Dictionary<DirectionalTileType, Faces[]> facings = new Dictionary<DirectionalTileType, Faces[]>()
     {
         { DirectionalTileType.Intersection,       new Faces[4] {Faces.Top, Faces.Right, Faces.Bottom, Faces.Left} },
@@ -107,6 +117,88 @@ public static class TileTypeExtensions
     public static Faces[] GetFaces(this DirectionalTileType t)
     {
         return facings[t];
+    }
+    public static List<DirectionalTileType> GetValidDirectionalTiles(this NeighborhoodMap neighborhood)
+    {
+        var valids = AllDirectionalTiles.ToList();
+        valids.Remove(DirectionalTileType.Unknown);
+
+        if (neighborhood.Top.HasValue && neighborhood.Top.Value)
+        {
+            valids.Remove(DirectionalTileType.EndcapLeft);
+            valids.Remove(DirectionalTileType.EndcapRight);
+            valids.Remove(DirectionalTileType.EndcapBottom);
+            valids.Remove(DirectionalTileType.StraightHorizontal);
+            valids.Remove(DirectionalTileType.TJunctionBottom);
+        }
+        if (neighborhood.Right.HasValue && neighborhood.Right.Value)
+        {
+            valids.Remove(DirectionalTileType.EndcapTop);
+            valids.Remove(DirectionalTileType.EndcapBottom);
+            valids.Remove(DirectionalTileType.EndcapLeft);
+            valids.Remove(DirectionalTileType.StraightVertical);
+            valids.Remove(DirectionalTileType.TJunctionLeft);
+        }
+        if (neighborhood.Bottom.HasValue && neighborhood.Bottom.Value)
+        {
+            valids.Remove(DirectionalTileType.EndcapLeft);
+            valids.Remove(DirectionalTileType.EndcapRight);
+            valids.Remove(DirectionalTileType.EndcapTop);
+            valids.Remove(DirectionalTileType.StraightHorizontal);
+            valids.Remove(DirectionalTileType.TJunctionTop);
+        }
+        if (neighborhood.Left.HasValue && neighborhood.Left.Value)
+        {
+            valids.Remove(DirectionalTileType.EndcapTop);
+            valids.Remove(DirectionalTileType.EndcapBottom);
+            valids.Remove(DirectionalTileType.EndcapRight);
+            valids.Remove(DirectionalTileType.StraightVertical);
+            valids.Remove(DirectionalTileType.TJunctionRight);
+        }
+        if (neighborhood.Top.HasValue && !neighborhood.Top.Value)
+        {
+            valids.Remove(DirectionalTileType.Intersection);
+            valids.Remove(DirectionalTileType.EndcapTop);
+            valids.Remove(DirectionalTileType.StraightVertical);
+            valids.Remove(DirectionalTileType.TJunctionTop);
+            valids.Remove(DirectionalTileType.TJunctionLeft);
+            valids.Remove(DirectionalTileType.TJunctionRight);
+        }
+        if (neighborhood.Left.HasValue && !neighborhood.Left.Value)
+        {
+            valids.Remove(DirectionalTileType.Intersection);
+            valids.Remove(DirectionalTileType.EndcapLeft);
+            valids.Remove(DirectionalTileType.StraightHorizontal);
+            valids.Remove(DirectionalTileType.TJunctionLeft);
+            valids.Remove(DirectionalTileType.TJunctionTop);
+            valids.Remove(DirectionalTileType.TJunctionBottom);
+        }
+        if (neighborhood.Right.HasValue && !neighborhood.Right.Value)
+        {
+            valids.Remove(DirectionalTileType.Intersection);
+            valids.Remove(DirectionalTileType.EndcapRight);
+            valids.Remove(DirectionalTileType.StraightHorizontal);
+            valids.Remove(DirectionalTileType.TJunctionRight);
+            valids.Remove(DirectionalTileType.TJunctionTop);
+            valids.Remove(DirectionalTileType.TJunctionBottom);
+        }
+        if (neighborhood.Bottom.HasValue && !neighborhood.Bottom.Value)
+        {
+            valids.Remove(DirectionalTileType.Intersection);
+            valids.Remove(DirectionalTileType.EndcapBottom);
+            valids.Remove(DirectionalTileType.StraightVertical);
+            valids.Remove(DirectionalTileType.TJunctionBottom);
+            valids.Remove(DirectionalTileType.TJunctionLeft);
+            valids.Remove(DirectionalTileType.TJunctionRight);
+        }
+        return valids;
+    }
+    public static bool? HasFace(this DirectionalTileType t, Faces matchFace)
+    {
+        if (t == DirectionalTileType.Unknown)
+            return null;
+        else
+            return facings[t].Contains(matchFace);
     }
 }
 
@@ -159,20 +251,36 @@ public class ProceduralMapper : MonoBehaviour {
     {
         foreach(Vector2Int coords in GenerateOutTo(3))
         {
-            DirectionalTileType newType = GetRandom();
+            DirectionalTileType newType;
             if (coords.x == 0 && coords.y == 0)
             {
                 newType = DirectionalTileType.Intersection;
             }
+            else
+            {
+                newType = GetValidTile(coords);
+            }
             Map.SetType(coords.x, coords.y, newType);
             SetImage(coords, newType);
-            yield return new WaitForSeconds(.15f);
+            yield return new WaitForSeconds(.01f);
         }
+    }
+    
+    private DirectionalTileType GetValidTile(Vector2Int coords)
+    {
+        var neighborMap = new NeighborhoodMap();
+        neighborMap.Left = Map.GetType(coords.x - 1, coords.y).HasFace(Faces.Right);
+        neighborMap.Right = Map.GetType(coords.x + 1, coords.y).HasFace(Faces.Left);
+        neighborMap.Bottom = Map.GetType(coords.x, coords.y - 1).HasFace(Faces.Top);
+        neighborMap.Top = Map.GetType(coords.x, coords.y + 1).HasFace(Faces.Bottom);
+        var validTiles = neighborMap.GetValidDirectionalTiles();
+        
+        return validTiles[UnityEngine.Random.Range(0, validTiles.Count)];
     }
 
     private DirectionalTileType GetRandom()
     {
-        return (DirectionalTileType)UnityEngine.Random.Range(0, 11);
+        return (DirectionalTileType)UnityEngine.Random.Range(1, 11);
     }
 
     private void SetImage(Vector2Int coords, DirectionalTileType type)
@@ -184,9 +292,13 @@ public class ProceduralMapper : MonoBehaviour {
         }
         var tile = this.TilesetIcons.Get(type);
         RectTransform r = GameObject.Instantiate<RectTransform>(tile.Item, CityStreetPanel);
+        if (Math.Abs(tile.Rotation) == 90)
+        {
+            tile.Rotation = -tile.Rotation;
+        }
         r.rotation = Quaternion.Euler(0, 0, tile.Rotation);
         r.anchoredPosition = new Vector3(coords.x * 100, coords.y * 100);
-        r.name = coords.ToString();
+        r.name = coords.ToString() + type.ToString();
     }
 
     public static IEnumerable<Vector2Int> GenerateOutTo(int radius)

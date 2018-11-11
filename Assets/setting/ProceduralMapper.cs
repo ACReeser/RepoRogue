@@ -266,6 +266,7 @@ public class ProceduralMapper : MonoBehaviour {
             CreateStreet(coords, newType);
             yield return new WaitForSeconds(.01f);
         }
+        CityStreetPanel.rotation = Quaternion.Euler(0, 0, 45f);
     }
 
     private void CreateStreet(Vector2Int coords, DirectionalTileType type)

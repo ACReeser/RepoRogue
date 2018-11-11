@@ -20,6 +20,7 @@ public class YouAreHere : MonoBehaviour {
         //YouAreHereSprite.anchoredPosition = Vector2.Lerp(YouAreHereSprite.anchoredPosition, newPosition, Time.deltaTime);
         //time += Time.deltaTime;
         YouAreHereSprite.anchoredPosition  = new Vector2(Player.position.x / 69.8f * 100, Player.position.z / 69.8f * 100);
+        YouAreHereSprite.SetAsLastSibling();
     }
 
     private IEnumerator Follow()

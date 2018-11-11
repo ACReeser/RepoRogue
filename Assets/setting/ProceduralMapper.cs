@@ -231,6 +231,7 @@ public class Map
 public class ProceduralMapper : MonoBehaviour {
     public Map Map = new Map(5);
     public RectTransform CityStreetPanel;
+    public Transform StreetsParent;
     public TilesetRectTransform TilesetIcons;
     public TilesetTransform TilesetPrefabs;
 
@@ -247,7 +248,7 @@ public class ProceduralMapper : MonoBehaviour {
         }
 	}
 
-    public IEnumerator BuildMap ()
+    public IEnumerator BuildMap()
     {
         foreach(Vector2Int coords in GenerateOutTo(3))
         {
@@ -262,10 +263,20 @@ public class ProceduralMapper : MonoBehaviour {
             }
             Map.SetType(coords.x, coords.y, newType);
             SetImage(coords, newType);
+            CreateStreet(coords, newType);
             yield return new WaitForSeconds(.01f);
         }
     }
-    
+
+    private void CreateStreet(Vector2Int coords, DirectionalTileType type)
+    {
+        var streetBlockInfo = this.TilesetPrefabs.Get(type);
+        Transform streetBlock = GameObject.Instantiate<Transform>(streetBlockInfo.Item, StreetsParent);
+        streetBlock.rotation = Quaternion.Euler(0f, streetBlockInfo.Rotation, 0f);
+        streetBlock.position = new Vector3(coords.x * 69.8f, 0, coords.y * 69.8f);
+        streetBlock.name = coords.ToString() + type.ToString();
+    }
+
     private DirectionalTileType GetValidTile(Vector2Int coords)
     {
         var neighborMap = new NeighborhoodMap();

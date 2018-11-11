@@ -11,54 +11,128 @@ public class TilesetRectTransform : Tileset<RectTransform> { }
 [Serializable]
 public class TilesetTransform : Tileset<Transform> { }
 
-public class Tileset<T>
+[Serializable]
+public class DirectionalTileRectTransform : DirectionalTile<RectTransform> { }
+
+public class DirectionalTile<T>
+{
+    public T Item;
+    public int Rotation;
+}
+
+public abstract class Tileset<T>
 {
     public T Intersection;
     public T TJunction;
     public T Straight;
     public T Endcap;
 
-    public T Get(TileType t)
+    public DirectionalTile<T> Get(DirectionalTileType t)
     {
-        switch (t)
+        if (t == DirectionalTileType.Intersection)
+            return new DirectionalTile<T>() { Item = Intersection };
+        else
         {
-            case TileType.TJunction:
-                return TJunction;
-            case TileType.Straight:
-                return Straight;
-            case TileType.Endcap:
-                return Endcap;
-            default:
-                return Intersection;
-        }
+            switch (t)
+            {
+                case DirectionalTileType.StraightHorizontal:
+                    return new DirectionalTile<T>() { Item = Straight };
+                case DirectionalTileType.StraightVertical:
+                    return new DirectionalTile<T>() { Item = Straight, Rotation = 90 };
+                case DirectionalTileType.TJunctionTop:
+                    return new DirectionalTile<T>() { Item = TJunction, Rotation = -90 };
+                case DirectionalTileType.TJunctionRight:
+                    return new DirectionalTile<T>() { Item = TJunction };
+                case DirectionalTileType.TJunctionBottom:
+                    return new DirectionalTile<T>() { Item = TJunction, Rotation = 90 };
+                case DirectionalTileType.TJunctionLeft:
+                    return new DirectionalTile<T>() { Item = TJunction, Rotation = 180 };
+                case DirectionalTileType.EndcapTop:
+                    return new DirectionalTile<T>() { Item = Endcap, Rotation = 90 };
+                case DirectionalTileType.EndcapRight:
+                    return new DirectionalTile<T>() { Item = Endcap, Rotation = 180 };
+                case DirectionalTileType.EndcapBottom:
+                    return new DirectionalTile<T>() { Item = Endcap, Rotation = -90 };
+                case DirectionalTileType.EndcapLeft:
+                    return new DirectionalTile<T>() { Item = Endcap };
+            }
+
+            Debug.Log("Can't find a tile for "+ t);
+            return null;
+        } 
     }
 }
 
 public enum TileType
 {
-    Intersection,
-    TJunction,
-    Straight,
-    Endcap
+    Intersection = 0,
+    TJunction = 10,
+    Straight = 20,
+    Endcap = 30,
+}
+public enum DirectionalTileType
+{
+    Intersection = 0,
+    TJunctionTop, // = 10,
+    TJunctionRight,
+    TJunctionBottom,
+    TJunctionLeft,
+    StraightVertical, // = 20,
+    StraightHorizontal,
+    EndcapTop, // = 30,
+    EndcapRight,
+    EndcapBottom,
+    EndcapLeft,
+}
+public enum Faces
+{
+    Top = 0, Right = 1, Bottom = 2, Left = 3, Unknown = 9
+}
+public static class TileTypeExtensions
+{
+    private static Dictionary<DirectionalTileType, Faces[]> facings = new Dictionary<DirectionalTileType, Faces[]>()
+    {
+        { DirectionalTileType.Intersection,       new Faces[4] {Faces.Top, Faces.Right, Faces.Bottom, Faces.Left} },
+        { DirectionalTileType.StraightVertical,   new Faces[2] {Faces.Top, Faces.Bottom} },
+        { DirectionalTileType.StraightHorizontal, new Faces[2] {Faces.Right, Faces.Left} },
+        { DirectionalTileType.TJunctionTop,       new Faces[3] {Faces.Right, Faces.Top, Faces.Left} },
+        { DirectionalTileType.TJunctionRight,     new Faces[3] {Faces.Right, Faces.Bottom, Faces.Top} },
+        { DirectionalTileType.TJunctionBottom,    new Faces[3] {Faces.Right, Faces.Bottom, Faces.Left} },
+        { DirectionalTileType.TJunctionLeft,      new Faces[3] {Faces.Top, Faces.Bottom, Faces.Left} },
+        { DirectionalTileType.EndcapTop,          new Faces[1] {Faces.Top} },
+        { DirectionalTileType.EndcapRight,        new Faces[1] {Faces.Right} },
+        { DirectionalTileType.EndcapBottom,       new Faces[1] {Faces.Bottom} },
+        { DirectionalTileType.EndcapLeft,         new Faces[1] {Faces.Left} },
+    };
+    public static Faces[] GetFaces(this DirectionalTileType t)
+    {
+        return facings[t];
+    }
 }
 
 public class Map
 {
     public int MaxRadius { get; private set; }
-    private TileType[,] map;
+    private DirectionalTileType[,] map;
     public Map(int maxRadius)
     {
         this.MaxRadius = maxRadius;
-        map = new TileType[maxRadius * 2 + 1, maxRadius * 2 + 1];
-        this.SetType(0, 0, TileType.Intersection);
+        map = new DirectionalTileType[maxRadius * 2 + 1, maxRadius * 2 + 1];
+        this.SetType(0, 0, DirectionalTileType.Intersection);
     }
-    public TileType GetType(int x, int y)
+    public DirectionalTileType GetType(int x, int y)
     {
         return map[x + MaxRadius, y + MaxRadius];
     }
-    public void SetType(int x, int y, TileType t)
+    public void SetType(int x, int y, DirectionalTileType t)
     {
         map[x + MaxRadius, y + MaxRadius] = t;
+    }
+    public bool IsValid(int x, int y, DirectionalTileType? t = null)
+    {
+        var type = t ?? GetType(x, y);
+        //map[x + MaxRadius, y + MaxRadius] = t;
+        return true;
     }
 }
 
@@ -75,17 +149,20 @@ public class ProceduralMapper : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if (Input.GetKeyDown(KeyCode.M))
+        {
+            CityStreetPanel.gameObject.SetActive(!CityStreetPanel.gameObject.activeSelf);
+        }
 	}
 
     public IEnumerator BuildMap ()
     {
         foreach(Vector2Int coords in GenerateOutTo(3))
         {
-            TileType newType = GetRandom();
+            DirectionalTileType newType = GetRandom();
             if (coords.x == 0 && coords.y == 0)
             {
-                newType = TileType.Intersection;
+                newType = DirectionalTileType.Intersection;
             }
             Map.SetType(coords.x, coords.y, newType);
             SetImage(coords, newType);
@@ -93,19 +170,21 @@ public class ProceduralMapper : MonoBehaviour {
         }
     }
 
-    private TileType GetRandom()
+    private DirectionalTileType GetRandom()
     {
-        return (TileType)UnityEngine.Random.Range(0, 5);
+        return (DirectionalTileType)UnityEngine.Random.Range(0, 11);
     }
 
-    private void SetImage(Vector2Int coords, TileType type)
+    private void SetImage(Vector2Int coords, DirectionalTileType type)
     {
         var t = CityStreetPanel.Find(coords.ToString());
         if (t != null)
         {
             GameObject.Destroy(t);
         }
-        RectTransform r = GameObject.Instantiate<RectTransform>(this.TilesetIcons.Get(type), CityStreetPanel);
+        var tile = this.TilesetIcons.Get(type);
+        RectTransform r = GameObject.Instantiate<RectTransform>(tile.Item, CityStreetPanel);
+        r.rotation = Quaternion.Euler(0, 0, tile.Rotation);
         r.anchoredPosition = new Vector3(coords.x * 100, coords.y * 100);
         r.name = coords.ToString();
     }

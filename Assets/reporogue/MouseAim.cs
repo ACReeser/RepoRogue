@@ -1,7 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.ThirdPerson;
+
+[Serializable]
+public class ZoomInfo
+{
+    public float ClosestZoomSize = 2f;
+    public float FurthestZoomSize = 10f;
+    public float CurrentZoomSize = 8f;
+    public float ZoomSpeed = 75f;
+}
 
 public class MouseAim : MonoBehaviour {
     public float floorHeight;
@@ -9,6 +19,7 @@ public class MouseAim : MonoBehaviour {
     public Animator animator;
     public ThirdPersonCharacter character;
     public BulletShooter shooter;
+    public ZoomInfo Zoom;
 
 	// Use this for initialization
 	void Start () {
@@ -41,6 +52,10 @@ public class MouseAim : MonoBehaviour {
             shooter.Shoot(muzzle.position, muzzle.rotation);
             animator.SetTrigger("SniperFire");
         }
+
+        Zoom.CurrentZoomSize -= Time.deltaTime * Zoom.ZoomSpeed * Input.GetAxis("Mouse ScrollWheel");
+        Zoom.CurrentZoomSize = Mathf.Clamp(Zoom.CurrentZoomSize, Zoom.ClosestZoomSize, Zoom.FurthestZoomSize);
+        Camera.main.orthographicSize = Zoom.CurrentZoomSize;
     }
 	
 	// Update is called once per frame

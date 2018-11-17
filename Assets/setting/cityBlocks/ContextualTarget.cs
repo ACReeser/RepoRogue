@@ -6,17 +6,26 @@ public interface IContextTarget
 {
     Intersection linkedIntersection { get; set; }
     float contextRadius { get; set; }
-    Transform Player { get; set; }
+    int contextTextIndex { get; set; }
+    Transform Player { get; }
+    ContextPool Pool { get; }
+    Vector3 TextOffset { get; }
     void DoInteract();
 }
 
 public class ContextualTarget : MonoBehaviour, IContextTarget {
     public Intersection linkedIntersection { get; set; }
     public float contextRadius { get; set; }
-    public Transform Player { get; set; }
+    public int contextTextIndex { get; set; }
+    public Transform player;
+    public Transform Player { get { return player; } }
+    public Vector3 textOffset;
+    public Vector3 TextOffset { get { return textOffset; } }
+    public ContextPool pool;
+    public ContextPool Pool { get { return pool; } }
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    public virtual void Start () {
         if (contextRadius <= 0f)
         {
             contextRadius = 5f;
@@ -43,13 +52,16 @@ public class ContextualTarget : MonoBehaviour, IContextTarget {
     }
 
     // Update is called once per frame
-    void Update () {
+    public virtual void Update () {
         if (Player != null)
         {
             float distanceFromPlayer = Vector3.Distance(this.transform.position, Player.position);
-            if (distanceFromPlayer < contextRadius && !wasPlayerWithinRange)
+            if (distanceFromPlayer < contextRadius)
             {
-                OnPlayerWalkIntoRange(distanceFromPlayer);
+                if (!wasPlayerWithinRange)
+                {
+                    OnPlayerWalkIntoRange(distanceFromPlayer);
+                }
             } else if (wasPlayerWithinRange)
             {
                 OnPlayerWalkOutOfRange();
@@ -61,10 +73,12 @@ public class ContextualTarget : MonoBehaviour, IContextTarget {
     private void OnPlayerWalkIntoRange(float range)
     {
         wasPlayerWithinRange = true;
+        this.contextTextIndex = Pool.ShowContext(transform.position+TextOffset);
     }
     private void OnPlayerWalkOutOfRange()
     {
         wasPlayerWithinRange = false;
+        Pool.HideContext(this.contextTextIndex);
     }
 
     public void DoInteract()

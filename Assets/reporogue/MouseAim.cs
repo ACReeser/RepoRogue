@@ -47,7 +47,7 @@ public class MouseAim : MonoBehaviour {
         {
             animator.SetBool("Aim", false);
         }
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && Input.GetMouseButton(1))
         {
             shooter.Shoot(muzzle.position, muzzle.rotation);
             animator.SetTrigger("SniperFire");

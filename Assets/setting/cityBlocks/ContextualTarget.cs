@@ -62,6 +62,10 @@ public class ContextualTarget : MonoBehaviour, IContextTarget {
                 {
                     OnPlayerWalkIntoRange(distanceFromPlayer);
                 }
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    DoInteract();
+                }
             } else if (wasPlayerWithinRange)
             {
                 OnPlayerWalkOutOfRange();
@@ -81,7 +85,7 @@ public class ContextualTarget : MonoBehaviour, IContextTarget {
         Pool.HideContext(this.contextTextIndex);
     }
 
-    public void DoInteract()
+    public virtual void DoInteract()
     {
 
     }

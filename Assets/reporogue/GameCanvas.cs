@@ -33,13 +33,15 @@ public class GameCanvas : MonoBehaviour {
     public ProfileUI ProfileUI;
 
 	// Use this for initialization
-	void Start () {
-        StartCoroutine(DisplayConversation(new Profile(), new string[]
-        {
-            "> I have a job for you, if you have the stomach.",
-            "> A narcpusher just bragcasted about his shiny new eHeart. I put a trackerapp in his tech last week hoping he'd do something dumb. I'm streaming you his realtime location now.",
-            "> Track him down and take his heart and I'll pay handsomely."
-        }));
+	void Start ()
+    {
+        ProfileUI.ProfilePanel.gameObject.SetActive(false);
+        //StartCoroutine(DisplayConversation(new Profile(), new string[]
+        //{
+        //    "> I have a job for you, if you have the stomach.",
+        //    "> A narcpusher just bragcasted about his shiny new eHeart. I put a trackerapp in his tech last week hoping he'd do something dumb. I'm streaming you his realtime location now.",
+        //    "> Track him down and take his heart and I'll pay handsomely."
+        //}));
 	}
 	
 	// Update is called once per frame
@@ -53,8 +55,14 @@ public class GameCanvas : MonoBehaviour {
         HealthBar.Bar.fillAmount = (health+0f) / (maxHealth+0f);
     }
 
-    public IEnumerator DisplayConversation(Profile from, string[] segment)
+    public void DisplayConversation(Profile from, string[] segment)
     {
+        StartCoroutine(_DisplayConversation(from, segment));
+    }
+
+    private IEnumerator _DisplayConversation(Profile from, string[] segment)
+    {
+        ProfileUI.ProfilePanel.gameObject.SetActive(true);
         ProfileUI.ConversationText.text = "";
         foreach (string seg in segment)
         {
@@ -62,7 +70,7 @@ public class GameCanvas : MonoBehaviour {
         }
     }
 
-    public IEnumerator TypeText(Text source, string segment)
+    private IEnumerator TypeText(Text source, string segment)
     {
         foreach(char c in segment)
         {
@@ -70,5 +78,15 @@ public class GameCanvas : MonoBehaviour {
             yield return new WaitForSeconds(0.01f);
         }
         source.text += '\n';
+    }
+
+    public void ConversationSelect(int index)
+    {
+        if (index < 0)
+            this.ConversationExit();
+    }
+    public void ConversationExit()
+    {
+        ProfileUI.ProfilePanel.gameObject.SetActive(false);
     }
 }
